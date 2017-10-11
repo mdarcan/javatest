@@ -109,7 +109,7 @@ public void MainThread() {
 		msgParameter4 = new String();
 		
 		msgParameter2 = "In data ";
-	    msgParameter3 = " è stato pubblicato il seguente messaggio sul registro elettronico: '" ; 
+	    msgParameter3 = " e' stato pubblicato il seguente messaggio sul registro elettronico: '" ; 
 		msgParameter4 = "'. Per il dettaglio accedi alla tua area personale. " ; 
 		
 		LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
