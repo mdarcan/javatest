@@ -5,34 +5,23 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URLEncoder;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
-import javax.servlet.ServletContext;
-
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogConfigurationException;
-import org.apache.commons.logging.impl.NoOpLog;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
-import com.gargoylesoftware.htmlunit.ElementNotFoundException;
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlImage;
@@ -67,25 +56,45 @@ private String botUrlAlive;
 private String results;
 private SimpleDateFormat dateFormat;
 private SimpleDateFormat dateFormathhmmss;
+private Integer threadIndex;
+private String threadName;
+private boolean errorDetected=false;
 
-public void MainThread() {
+public REBotLogin(Integer tIdx, String tName) {
+	threadIndex = tIdx;
+	threadName = tName;
+}
+
+public REBotLogin() {
+	threadIndex = 1;
+	threadName = "[Thread number 1]";
+}
+
+private void printLog(String inMessage) throws IOException {
+	Calendar logDateTime = Calendar.getInstance();
+	System.out.println( dateFormathhmmss.format(logDateTime.getTime()) + " [" + threadIndex.toString() + ":" + threadName + "] - " + inMessage);
+}
+
+public void MainThread() throws UnsupportedEncodingException {
 	
     try {
 
 		dateFormat = new SimpleDateFormat("dd/MM/yyyy"); 
-		dateFormathhmmss = new SimpleDateFormat("dd/MM/yyyy HH:mm"); 
+		dateFormathhmmss = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"); 
     	today = new Date();
     	
     	config = RELoadConfig.getInstance();
     	
-    	String AliveMsg = dateFormathhmmss.format(today) + " : javaREbot service is alive";
-    	botUrlAlive = config.getParameterValue("boturlalive") + URLEncoder.encode(AliveMsg, "UTF-8");
-    	results = doHttpUrlConnectionAction(botUrlAlive);
+    	if (threadIndex == 1) {
+	    	String AliveMsg = dateFormathhmmss.format(today) + " (local Timezone) [javaREbot:1.2] Service Alive";
+	    	botUrlAlive = config.getParameterValue("boturlalive") + URLEncoder.encode(AliveMsg, "UTF-8");
+	    	results = doHttpUrlConnectionAction(botUrlAlive);
+    	}
     	
 
     	//Sottraggo xx giorni alla data di oggi
     	dateLimit = dateFormat.parse(dateFormat.format(new Date()));
-    	Calendar c = Calendar.getInstance(); 
+    	Calendar c = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone"))); 
     	c.setTime(today); 
     	c.add(Calendar.DATE, -Integer.parseInt(config.getParameterValue("retainrange")));
     	dateLimit = c.getTime();    	
@@ -122,7 +131,9 @@ public void MainThread() {
 		webClient.waitForBackgroundJavaScript(30 * 1000);
 		webClient.getOptions().setThrowExceptionOnScriptError(false);
 		webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-		System.out.println("Connessione Registro Elettronico...");
+		long startTime = System.nanoTime();
+		printLog("--- INIZIO SESSIONE ---");
+		printLog("Connessione Registro Elettronico...");
 		final HtmlPage page1 = webClient.getPage(config.getParameterValue("reurl"));
    
 		final List<HtmlForm> form = page1.getForms();
@@ -133,7 +144,7 @@ public void MainThread() {
 		   page2 = (HtmlPage) Imagebutton.click();
 		}
 
-		System.out.println("Login al sistema...");
+		printLog("Login al sistema...");
 		HtmlPage page3=null;    
 		for (HtmlForm frm2 : page2.getForms()){
 		    final HtmlTextInput userInput = frm2.getInputByName("txtUser");
@@ -144,7 +155,7 @@ public void MainThread() {
 		    page3 = button.click();
 		 }
 		
-		System.out.println("Leggo comunicazioni...");
+		printLog("Leggo comunicazioni...");
 		HtmlImage comImg = page3.getHtmlElementById("IdComunicazioni");    
 		HtmlPage page4 = (HtmlPage) comImg.click();
 
@@ -186,30 +197,31 @@ public void MainThread() {
 		oLista.flush();
 		oLista.close();
 		webClient.close();		
-		System.out.println("Sessione terminata");
+		long difference = System.nanoTime() - startTime;
+		printLog("--- FINE SESSIONE ( elapsed : " + 
+	                        TimeUnit.NANOSECONDS.toHours(difference) %24 + "h " +
+	                        TimeUnit.NANOSECONDS.toMinutes(difference) %60 + "m " + 
+	                        TimeUnit.NANOSECONDS.toSeconds(difference) %60 + "s" + " ) ---");
 		
 	} catch (SecurityException e) {
 		e.printStackTrace();
-	} catch (FailingHttpStatusCodeException e) {
-		e.printStackTrace();
-	} catch (MalformedURLException e) {
-		e.printStackTrace();
-	} catch (ElementNotFoundException e) {
-		e.printStackTrace();
-	} catch (UnsupportedEncodingException e) {
-		e.printStackTrace();
-	} catch (IndexOutOfBoundsException e) {
-		e.printStackTrace();
-	} catch (ParseException e1) {
-		e1.printStackTrace();
-	} catch (ClassNotFoundException e1) {
-		e1.printStackTrace();
-	} catch (IOException e1) {
-		e1.printStackTrace();
+
+    	
 	} catch (Exception e) {
-		// TODO Auto-generated catch block
 		e.printStackTrace();
+		errorDetected=true;
 	}
+    
+    if (errorDetected) {
+		String ErrorMsg = dateFormathhmmss.format(today) + " (local Timezone) : javaREbot - PROCEDURE ERROR DETECTED (see logs)";
+		try {
+			botUrlAlive = config.getParameterValue("boturlalive") + URLEncoder.encode(ErrorMsg, "UTF-8");
+			results = doHttpUrlConnectionAction(botUrlAlive);
+			errorDetected=false;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    }
             
   }
   
@@ -224,7 +236,7 @@ public void MainThread() {
 	  	String msgParameter = msgParameter2 + dateFormat.format(cb.getData()) + msgParameter3 + cb.getCom() + msgParameter4;
 	  	String botUrltmp = botUrl.concat(URLEncoder.encode(msgParameter,"UTF-8"));
         results = doHttpUrlConnectionAction(botUrltmp);
-      	System.out.println("Inviata nuova comunicazione del " + cb.getData().toString());		
+        printLog("Inviata nuova comunicazione del " + cb.getData().toString());		
 	}
 	
   }
@@ -244,7 +256,12 @@ public void MainThread() {
   }
 
 
-  private boolean IsFound(Date in_Date, String in_comunicazione) throws ClassNotFoundException, IOException {
+@Override
+public boolean cancel() {
+	return super.cancel();
+}
+
+private boolean IsFound(Date in_Date, String in_comunicazione) throws ClassNotFoundException, IOException {
 	   for (ComBean cb : comBeanArray) {
 	     if (cb.getData().compareTo(in_Date) == 0 && cb.getCom().compareTo(in_comunicazione) == 0) 
 		    return true;
@@ -262,21 +279,13 @@ public void MainThread() {
 
     try
     {
-      // create the HttpURLConnection
+
       url = new URL(desiredUrl);
-      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-      
-      // just want to do an HTTP GET here
-      connection.setRequestMethod("POST");
-      
-      // uncomment this if you want to write output to this url
-      connection.setDoOutput(true);
-      
-      // give it 15 seconds to respond
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();     
+      connection.setRequestMethod("POST");     
+      connection.setDoOutput(true);     
       connection.setReadTimeout(15*1000);
       connection.connect();
-
-      // read the output from the server
       reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
       stringBuilder = new StringBuilder();
 
@@ -294,8 +303,6 @@ public void MainThread() {
     }
     finally
     {
-      // close the reader; this can throw an exception too, so
-      // wrap it in another try/catch block.
       if (reader != null)
       {
         try
@@ -315,7 +322,7 @@ public void MainThread() {
 @Override
 public void run() {
   try {
-	Thread.sleep(10000);
+	Thread.sleep(8000);
 	MainThread();
 } catch (Exception e) {
 	e.printStackTrace();
