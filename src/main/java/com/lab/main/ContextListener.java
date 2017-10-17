@@ -38,14 +38,14 @@ public class ContextListener implements ServletContextListener {
     			LocalTime sched1Time = LocalTime.of(sched1Hour,sched1Minute,sched1Second,0);
     			LocalTime sched2Time = LocalTime.of(sched2Hour,sched2Minute,sched2Second,0);
     					
-    	    	REBotLogin task = new REBotLogin(2, "[Schedulazione " + RELoadConfig.getInstance().getParameterValue("schedule1") + "]");
+    	    	REBotLogin task = new REBotLogin(1, "[Schedulazione " + RELoadConfig.getInstance().getParameterValue("schedule1") + "]");
     	    	Calendar firstSchedule = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone")));
     	    	firstSchedule.set(Calendar.HOUR_OF_DAY, sched1Time.getHour());
     	    	firstSchedule.set(Calendar.MINUTE, sched1Time.getMinute());
     	    	firstSchedule.set(Calendar.SECOND, sched1Time.getSecond());
     	    	firstSchedule.set(Calendar.MILLISECOND, 0);
     	    	   	    	
-    	    	REBotLogin task2 = new REBotLogin(3, "[Schedulazione " + RELoadConfig.getInstance().getParameterValue("schedule2") + "]");
+    	    	REBotLogin task2 = new REBotLogin(2, "[Schedulazione " + RELoadConfig.getInstance().getParameterValue("schedule2") + "]");
     	    	Calendar secondSchedule = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone")));
     	    	secondSchedule.set(Calendar.HOUR_OF_DAY, sched2Time.getHour());
     	    	secondSchedule.set(Calendar.MINUTE, sched2Time.getMinute());
