@@ -66,7 +66,7 @@ public class ContextListener implements ServletContextListener {
 	        	scheduler1= Executors.newSingleThreadScheduledExecutor();
 	        	scheduler1.scheduleAtFixedRate(task, initialFirstInterval, 24 * 60 * 60 * 1000, TimeUnit.MILLISECONDS);
 	        	
-	    		System.out.println("Schedule #1 - at Local -> " + RELoadConfig.getInstance().getParameterValue("schedule1") + " & Timezone -> " + new SimpleDateFormat("HH:mm:ss").format(firstSchedule.getTime()) + " Local Actual Time -> " + new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date(System.currentTimeMillis())) + " start in " + 
+	    		System.out.println("Schedule #1 - at Timezone -> " + RELoadConfig.getInstance().getParameterValue("schedule1") + " & Local -> " + new SimpleDateFormat("HH:mm:ss").format(firstSchedule.getTime()) + " Local Actual Time -> " + new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date(System.currentTimeMillis())) + " start in " + 
 	    		        TimeUnit.MILLISECONDS.toHours(initialFirstInterval) %24 + "h " +
 	    		        TimeUnit.MILLISECONDS.toMinutes(initialFirstInterval) %60 + "m " + 
 	    		        TimeUnit.MILLISECONDS.toSeconds(initialFirstInterval) %60 + "s");   
@@ -75,7 +75,7 @@ public class ContextListener implements ServletContextListener {
 	        	scheduler2= Executors.newSingleThreadScheduledExecutor();
 	        	scheduler2.scheduleAtFixedRate(task2, initialSecondInterval, 24 * 60 * 60 * 1000, TimeUnit.MILLISECONDS);
 	        	
-	    		System.out.println("Schedule #2 - at Local -> " + RELoadConfig.getInstance().getParameterValue("schedule2") + " & Timezone -> " + new SimpleDateFormat("HH:mm:ss").format(secondSchedule.getTime()) + " Local Actual Time -> " + new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date(System.currentTimeMillis())) + " start in " + 
+	    		System.out.println("Schedule #2 - at Timezone -> " + RELoadConfig.getInstance().getParameterValue("schedule2") + " & Local -> " + new SimpleDateFormat("HH:mm:ss").format(secondSchedule.getTime()) + " Local Actual Time -> " + new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(new Date(System.currentTimeMillis())) + " start in " + 
 	    		        TimeUnit.MILLISECONDS.toHours(initialSecondInterval) %24 + "h " +
 	    		        TimeUnit.MILLISECONDS.toMinutes(initialSecondInterval) %60 + "m " + 
 	    		        TimeUnit.MILLISECONDS.toSeconds(initialSecondInterval) %60 + "s");   
