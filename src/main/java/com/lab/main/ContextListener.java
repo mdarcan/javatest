@@ -73,9 +73,9 @@ public class ContextListener implements ServletContextListener {
     	    	
     	    	REBotLogin task4 = new REBotLogin(4, "[Schedulazione " + RELoadConfig.getInstance().getParameterValue("schedule4") + "]");
     	    	Calendar fourthSchedule = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone")));
-    	    	fourthSchedule.set(Calendar.HOUR_OF_DAY, sched2Time.getHour());
-    	    	fourthSchedule.set(Calendar.MINUTE, sched2Time.getMinute());
-    	    	fourthSchedule.set(Calendar.SECOND, sched2Time.getSecond());
+    	    	fourthSchedule.set(Calendar.HOUR_OF_DAY, sched4Time.getHour());
+    	    	fourthSchedule.set(Calendar.MINUTE, sched4Time.getMinute());
+    	    	fourthSchedule.set(Calendar.SECOND, sched4Time.getSecond());
     	    	fourthSchedule.set(Calendar.MILLISECOND, 0);    	    	
     	    	
     	    	long initialFirstInterval = firstSchedule.getTimeInMillis()-System.currentTimeMillis();
