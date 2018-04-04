@@ -168,15 +168,17 @@ public void MainThread() throws UnsupportedEncodingException {
 			    for (final HtmlTableRow row : slrows) {
 
 		        	String data = row.getCell(0).asText();
-		        	String comunicazione = row.getCell(2).asText();		       
-		        	
-		        	if (dateFormat.parse(data).after(dateLimit)) {
-			        	if (!IsFound(dateFormat.parse(data), comunicazione)) {
-			        		comBeanArray.add(new ComBean(dateFormat.parse(data), comunicazione));
-			        		comBeanArrayToSend.add(new ComBean(dateFormat.parse(data), comunicazione));
+		        	if (!data.equalsIgnoreCase("Nessuna comunicazione presente")) { 
+			        	String comunicazione = row.getCell(2).asText();		       
+			        	
+			        	if (dateFormat.parse(data).after(dateLimit)) {
+				        	if (!IsFound(dateFormat.parse(data), comunicazione)) {
+				        		comBeanArray.add(new ComBean(dateFormat.parse(data), comunicazione));
+				        		comBeanArrayToSend.add(new ComBean(dateFormat.parse(data), comunicazione));
+				        	}
+			        	
 			        	}
-		        	
-		        	}
+			        }
 
 		        }
 
