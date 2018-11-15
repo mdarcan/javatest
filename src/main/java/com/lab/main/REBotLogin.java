@@ -23,6 +23,7 @@ import org.apache.commons.logging.LogFactory;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.DomNode;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlImage;
 import com.gargoylesoftware.htmlunit.html.HtmlImageInput;
@@ -30,9 +31,11 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlPasswordInput;
 import com.gargoylesoftware.htmlunit.html.HtmlSubmitInput;
 import com.gargoylesoftware.htmlunit.html.HtmlTable;
+import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import com.gargoylesoftware.htmlunit.html.HtmlTableRow;
 import com.gargoylesoftware.htmlunit.html.HtmlTextInput;
 import com.lab.beans.ComBean;
+import com.lab.beans.HomeWorksBean;
 import com.lab.conf.RELoadConfig;
 
 import java.util.ArrayList;
@@ -43,14 +46,28 @@ public class REBotLogin extends TimerTask {
 	
 private ObjectOutputStream oLista;
 private ObjectInputStream iLista;
+private ObjectOutputStream oListaHomeW;
+private ObjectInputStream iListaHomeW;
+private ObjectOutputStream oListaClassA;
+private ObjectInputStream iListaClassA;
 private List<ComBean> comBeanArray;
 private List<ComBean> comBeanArrayToSend;
+private List<HomeWorksBean> hWBeanArray;
 private Date dateLimit;
 private Date today;
 private RELoadConfig config;
 private String msgParameter2;
 private String msgParameter3;
 private String msgParameter4;
+
+private String msgHomeWParameter2;
+private String msgHomeWParameter3;
+private String msgHomeWParameter4;
+
+private String msgClassAParameter2;
+private String msgClassAParameter3;
+private String msgClassAParameter4;
+
 private String botUrl;
 private String botUrlAlive;
 private String results;
@@ -88,7 +105,7 @@ public void MainThread() throws UnsupportedEncodingException {
     	if (threadIndex == 1) {
 	    	String AliveMsg = dateFormathhmmss.format(today) + " (local Timezone) [javaREbot:1.2] Service Alive";
 	    	botUrlAlive = config.getParameterValue("boturlalive") + URLEncoder.encode(AliveMsg, "UTF-8");
-	    	results = doHttpUrlConnectionAction(botUrlAlive);
+	    	//results = doHttpUrlConnectionAction(botUrlAlive);
     	}
     	
 
@@ -99,6 +116,7 @@ public void MainThread() throws UnsupportedEncodingException {
     	c.add(Calendar.DATE, -Integer.parseInt(config.getParameterValue("retainrange")));
     	dateLimit = c.getTime();    	
     	
+    	// Definizione datafile delle comunicazioni
 		comBeanArray = new ArrayList<ComBean>();    	  	
 		comBeanArrayToSend = new ArrayList<ComBean>();
       	String fileName = "/archive/ListaCom.ser";
@@ -112,7 +130,22 @@ public void MainThread() throws UnsupportedEncodingException {
 			iLista.close();
 		} catch (Exception e) {}
     			
+    	
+    	// Definizione datafile del registro di classe
+		hWBeanArray = new ArrayList<HomeWorksBean>();    	  	
+      	String hWfileName = "/archive/ListaHomeWorks.ser";
+    		
+    	File hWserFile = new File(hWfileName);
+    	if (!hWserFile.exists()) hWserFile.createNewFile();    	
+    	try {
+    		FileInputStream in_streamListaHomeW = new FileInputStream(hWserFile);
+			iListaHomeW = new ObjectInputStream(in_streamListaHomeW);
+			hWBeanArray = (List<HomeWorksBean>) iListaHomeW.readObject();
+			iListaHomeW.close();
+		} catch (Exception e) {}
+    	// fine definizione file registro di classe
 		   	
+		   	    	
 		msgParameter2 = new String();
 		msgParameter3 = new String();
 		msgParameter4 = new String();
@@ -198,7 +231,96 @@ public void MainThread() throws UnsupportedEncodingException {
 		oLista.writeObject(comBeanArray);
 		oLista.flush();
 		oLista.close();
+		
+		
+		msgHomeWParameter2 = new String();
+		msgHomeWParameter3 = new String();
+		msgHomeWParameter4 = new String();
+		
+		msgHomeWParameter2 = "COMPITI per il ";
+		msgHomeWParameter3 = "" ; 
+		msgHomeWParameter4 = "" ; 
+		
+		msgClassAParameter2 = new String();
+		msgClassAParameter3 = new String();
+		msgClassAParameter4 = new String();
+		
+		msgClassAParameter2 = "ARGOMENTI lezioni del ";
+		msgClassAParameter3 = "" ; 
+		msgClassAParameter4 = "" ; 		
+		
+		printLog("Leggo registro di classe...");
+		HtmlImage hWImg = page4.getHtmlElementById("IdREC");    
+		HtmlPage recPage = (HtmlPage) hWImg.click();
+
+		
+		final List<HtmlTable> hWtables = recPage.getByXPath("//table[contains(@class, 'TableRegistroClasseGenitori')]");
+		for (HtmlTable hWtable : hWtables)  {
+			List<HtmlTableRow> hWrows = hWtable.getRows();
+			if (hWrows.size() > 1) {
+				int testsize = hWrows.size();
+				List<HtmlTableRow> hWslrows = (List<HtmlTableRow>) hWrows.subList(2, hWrows.size());
+			    for (final HtmlTableRow hWrow : hWslrows) {
+			    	String hWdata = hWrow.getCell(0).asText().substring(0, 10);
+			    			
+		        	if (!hWdata.equalsIgnoreCase("xxxxxxxxxx da definire xxxxxxxxx")) {
+		        		HtmlTableCell al = hWrow.getCell(1);
+		        		HtmlTableCell co = hWrow.getCell(2);		        		
+			        	//String compiti = co.asXml().replaceAll("<td.*>((.|\\s)*)<\\/td>", "$1").trim().replaceAll("<br\\/>\\s*", ""); // prende tutto il testo contenuto nel tag <td..></td>
+		        		//String compiti = co.asXml().replaceAll("<td.*>((.|\\s)*)<\\/td>", "$1").trim().replaceAll("<br\\/>\\s*", ""); // prende tutto il testo contenuto nel tag <td..></td>
+			        	//compiti = compiti.replaceAll("^\\s*/gm", "");
+			        	//System.out.println(compiti);
+		        		String attivita = al.asText();
+		        		String compiti = co.asText();
+		        		if ((!attivita.isEmpty() || !compiti.isEmpty())) { 
+				        	if (dateFormat.parse(hWdata).after(dateLimit)) {
+	
+			        			HomeWorksBean tempReadBean = IsFoundHomeWork(dateFormat.parse(hWdata), compiti, attivita);
+						       	if (tempReadBean == null) {
+						       	  HomeWorksBean tempWriteBean = new HomeWorksBean(dateFormat.parse(hWdata), compiti, attivita);
+						       	  if (!compiti.isEmpty()) tempWriteBean.setFlgHomeWSend(true);
+						       	  if (!attivita.isEmpty()) tempWriteBean.setFlgClassASend(true);
+						          hWBeanArray.add(tempWriteBean);
+				        		} else {
+				        			int idx = hWBeanArray.indexOf(tempReadBean);
+				        			if (!compiti.isEmpty() && tempReadBean.getHWork().isEmpty()) {
+				        				tempReadBean.setHWork(compiti);
+				        				tempReadBean.setFlgHomeWSend(true);			        				
+				        			}
+				        			if (!attivita.isEmpty() && tempReadBean.getClassActivity().isEmpty()) {
+				        				tempReadBean.setClassActivity(attivita);
+				        				tempReadBean.setFlgClassASend(true);		        				
+				        			}			        			
+				        			hWBeanArray.set(idx, tempReadBean);
+				        		}
+				        	
+				        	}
+		        		}
+			        }
+
+		        }
+
+		        
+			}    
+		}
+
+		hWBeanArray = SortingHomeWorks(hWBeanArray, "asc");
+		
+		SendHomeWorks(hWBeanArray);
+		
+		hWBeanArray = ShrinkHomeWorksBeans(hWBeanArray);
+		
+		hWserFile.delete();
+		hWserFile.createNewFile();
+		
+    	FileOutputStream out_streamListaHomeW = new FileOutputStream(hWserFile);
+		oListaHomeW = new ObjectOutputStream(out_streamListaHomeW);
+		oListaHomeW.writeObject(hWBeanArray);
+		oListaHomeW.flush();
+		oListaHomeW.close();
+		
 		webClient.close();		
+		
 		long difference = System.nanoTime() - startTime;
 		printLog("--- FINE SESSIONE ( elapsed : " + 
 	                        TimeUnit.NANOSECONDS.toHours(difference) %24 + "h " +
@@ -230,7 +352,7 @@ public void MainThread() throws UnsupportedEncodingException {
   
   private void SendComms(List<ComBean> arrayToSend) throws Exception {
 	  	
-  	if (config.getParameterValue("testflag").equalsIgnoreCase("1")) 
+  	if (config.getParameterValue("testComFlag").equalsIgnoreCase("1")) 
   		botUrl=config.getParameterValue("boturltest");
   	else botUrl=config.getParameterValue("boturl");
   	
@@ -243,6 +365,34 @@ public void MainThread() throws UnsupportedEncodingException {
 	
   }
 
+  
+	private void SendHomeWorks(List<HomeWorksBean> arrayToSend) throws Exception {
+		  	
+	if (config.getParameterValue("testRegFlag").equalsIgnoreCase("1")) 
+		botUrl=config.getParameterValue("boturltest");
+	else botUrl=config.getParameterValue("bothomeworkurl");
+	
+	for (HomeWorksBean cb : arrayToSend) {
+	  int idxObj = arrayToSend.indexOf(cb);
+	  if (cb.getFlgClassASend()) {
+		String msgClassAParameter = "<b>" + msgClassAParameter2 + dateFormat.format(cb.getData()) + "</b> \n" + msgClassAParameter3 + cb.getClassActivity() + msgClassAParameter4;
+	  	String botUrltmp = botUrl.concat(URLEncoder.encode(msgClassAParameter,"UTF-8"));
+	    results = doHttpUrlConnectionAction(botUrltmp);
+	    printLog("Inviato nuovo argomento del " + cb.getData().toString());		
+	    cb.setFlgClassASend(false);
+	  }	  
+	  if (cb.getFlgHomeWSend()) {
+		String msgHomeWParameter = "<b>" + msgHomeWParameter2 + dateFormat.format(cb.getData()) + "</b> \n" + msgHomeWParameter3 + cb.getHWork() + msgHomeWParameter4;
+	  	String botUrltmp = botUrl.concat(URLEncoder.encode(msgHomeWParameter,"UTF-8"));
+	    results = doHttpUrlConnectionAction(botUrltmp);
+	    printLog("Inviato nuovo compito del " + cb.getData().toString());
+	    cb.setFlgHomeWSend(false);
+	  }
+	  arrayToSend.set(idxObj, cb);
+	}
+		
+	}
+  
 
   private List<ComBean> ShrinkBeans(List<ComBean> cbarray) {
 	  
@@ -257,7 +407,19 @@ public void MainThread() throws UnsupportedEncodingException {
 	
   }
 
-
+  private List<HomeWorksBean> ShrinkHomeWorksBeans(List<HomeWorksBean> cbarray) {
+	  
+	List<HomeWorksBean> cbtemp = new ArrayList<HomeWorksBean>();
+    for (HomeWorksBean cb : cbarray) {
+    	if (cb.getData().after(dateLimit)) {
+    		cbtemp.add(cb);
+    	}
+    }
+    
+    return cbtemp;
+	
+  }
+  
 @Override
 public boolean cancel() {
 	return super.cancel();
@@ -270,6 +432,16 @@ private boolean IsFound(Date in_Date, String in_comunicazione) throws ClassNotFo
 	   }
 	   return false;
   }
+
+private HomeWorksBean IsFoundHomeWork(Date in_Date, String in_compito, String in_attivita) throws ClassNotFoundException, IOException {
+	   for (HomeWorksBean cb : hWBeanArray) {
+	     if ((cb.getData().compareTo(in_Date) == 0 && cb.getHWork().compareTo(in_compito) == 0) || 
+	         (cb.getData().compareTo(in_Date) == 0 && cb.getClassActivity().compareTo(in_attivita) == 0))
+	    	 return cb;
+	   }
+	   return null;
+}
+
 
 
   private static String doHttpUrlConnectionAction(String desiredUrl)
@@ -360,6 +532,32 @@ private List<ComBean> SortingComms(List<ComBean> in_cb, String in_mode)
    }
    return inputArray;
 }
+
+private List<HomeWorksBean> SortingHomeWorks(List<HomeWorksBean> in_cb, String in_mode) 
+{    
+  int i,j;
+  Date key;
+  List<HomeWorksBean> inputArray= in_cb;
+
+  for (j=1; j<inputArray.size(); j++) 
+    {
+        key = inputArray.get(j).getData();
+        i = j - 1;
+        while (i >= 0)
+        {
+        	if (in_mode.equalsIgnoreCase("asc")) {
+              if (key.compareTo(inputArray.get(i).getData()) > 0) {break;}
+        	} else {if (key.compareTo(inputArray.get(i).getData()) < 0) {break;}}
+            HomeWorksBean element=inputArray.get(i+1);      
+            inputArray.set(i+1,inputArray.get(i));       
+            inputArray.set(i,element);                  
+            i--;
+        }
+        key=inputArray.get(i+1).getData();
+   }
+   return inputArray;
+}
+
 
 }  
   
