@@ -275,11 +275,7 @@ public void MainThread() throws UnsupportedEncodingException {
 		        		if ((!attivita.isEmpty() || !compiti.isEmpty())) { 
 				        	if (dateFormat.parse(hWdata).after(dateLimit)) {
 	
-<<<<<<< HEAD
 			        			HomeWorksBean tempReadBean = IsFoundHomeWork(dateFormat.parse(hWdata));
-=======
-			        			HomeWorksBean tempReadBean = IsFoundHomeWork(dateFormat.parse(hWdata), compiti, attivita);
->>>>>>> 7963d9cb695b5066d47179ed0ff68551689f47dc
 						       	if (tempReadBean == null) {
 						       	  HomeWorksBean tempWriteBean = new HomeWorksBean(dateFormat.parse(hWdata), compiti, attivita);
 						       	  if (!compiti.isEmpty()) tempWriteBean.setFlgHomeWSend(true);
@@ -287,19 +283,11 @@ public void MainThread() throws UnsupportedEncodingException {
 						          hWBeanArray.add(tempWriteBean);
 				        		} else {
 				        			int idx = hWBeanArray.indexOf(tempReadBean);
-<<<<<<< HEAD
 				        			if (!compiti.isEmpty() && tempReadBean.getHWork().compareTo(compiti) != 0) {
 				        				tempReadBean.setHWork(compiti);
 				        				tempReadBean.setFlgHomeWSend(true);			        				
 				        			}
 				        			if (!attivita.isEmpty() && tempReadBean.getClassActivity().compareTo(attivita) != 0) {
-=======
-				        			if (!compiti.isEmpty() && tempReadBean.getHWork().isEmpty()) {
-				        				tempReadBean.setHWork(compiti);
-				        				tempReadBean.setFlgHomeWSend(true);			        				
-				        			}
-				        			if (!attivita.isEmpty() && tempReadBean.getClassActivity().isEmpty()) {
->>>>>>> 7963d9cb695b5066d47179ed0ff68551689f47dc
 				        				tempReadBean.setClassActivity(attivita);
 				        				tempReadBean.setFlgClassASend(true);		        				
 				        			}			        			
@@ -445,17 +433,9 @@ private boolean IsFound(Date in_Date, String in_comunicazione) throws ClassNotFo
 	   return false;
   }
 
-<<<<<<< HEAD
 private HomeWorksBean IsFoundHomeWork(Date in_Date) throws ClassNotFoundException, IOException {
 	   for (HomeWorksBean cb : hWBeanArray) {
 	     if (cb.getData().compareTo(in_Date) == 0) return cb;
-=======
-private HomeWorksBean IsFoundHomeWork(Date in_Date, String in_compito, String in_attivita) throws ClassNotFoundException, IOException {
-	   for (HomeWorksBean cb : hWBeanArray) {
-	     if ((cb.getData().compareTo(in_Date) == 0 && cb.getHWork().compareTo(in_compito) == 0) || 
-	         (cb.getData().compareTo(in_Date) == 0 && cb.getClassActivity().compareTo(in_attivita) == 0))
-	    	 return cb;
->>>>>>> 7963d9cb695b5066d47179ed0ff68551689f47dc
 	   }
 	   return null;
 }
