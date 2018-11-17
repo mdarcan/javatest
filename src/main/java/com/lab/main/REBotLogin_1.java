@@ -13,7 +13,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.TimerTask;
@@ -43,7 +42,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
-public class REBotLogin extends TimerTask {
+public class REBotLogin_1 extends TimerTask {
 	
 private ObjectOutputStream oLista;
 private ObjectInputStream iLista;
@@ -78,12 +77,12 @@ private Integer threadIndex;
 private String threadName;
 private boolean errorDetected=false;
 
-public REBotLogin(Integer tIdx, String tName) {
+public REBotLogin_1(Integer tIdx, String tName) {
 	threadIndex = tIdx;
 	threadName = tName;
 }
 
-public REBotLogin() {
+public REBotLogin_1() {
 	threadIndex = 1;
 	threadName = "[Thread number 1]";
 }
@@ -94,23 +93,9 @@ private void printLog(String inMessage) throws IOException {
 }
 
 public void MainThread() throws UnsupportedEncodingException {
-		
+	
     try {
 
-		Integer silentZoneHour = Integer.valueOf(((RELoadConfig.getInstance().getParameterValue("silentZoneStart")).split(":"))[0]);
-		Integer silentZoneMinute = Integer.valueOf(RELoadConfig.getInstance().getParameterValue("silentZoneStart").split(":")[1]);
-		Integer silentZoneSecond = Integer.valueOf(RELoadConfig.getInstance().getParameterValue("silentZoneStart").split(":")[2]);
-		LocalTime silentZone = LocalTime.of(silentZoneHour,silentZoneMinute,silentZoneSecond,0);
-		Calendar silentZoneTZ = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone")));
-		silentZoneTZ.set(Calendar.HOUR_OF_DAY, silentZone.getHour());
-		silentZoneTZ.set(Calendar.MINUTE, silentZone.getMinute());
-		silentZoneTZ.set(Calendar.SECOND, silentZone.getSecond());
-		silentZoneTZ.set(Calendar.MILLISECOND, 0);
-    			
-		Date silentZoneTZStart = silentZoneTZ.getTime();
-		silentZoneTZ.set(Calendar.HOUR_OF_DAY, silentZone.getHour() + Integer.parseInt(RELoadConfig.getInstance().getParameterValue("silentZoneDuration")));
-		Date silentZoneTZEnd = silentZoneTZ.getTime();
-    	
 		dateFormat = new SimpleDateFormat("dd/MM/yyyy"); 
 		dateFormathhmmss = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"); 
     	today = new Date();
@@ -127,13 +112,7 @@ public void MainThread() throws UnsupportedEncodingException {
     	//Sottraggo xx giorni alla data di oggi
     	dateLimit = dateFormat.parse(dateFormat.format(new Date()));
     	Calendar c = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone"))); 
-    	c.setTime(today);
-    	
-    	if (c.getTime().after(silentZoneTZStart) && c.getTime().before(silentZoneTZEnd)) {
-    		System.out.println("Attiva SilentZone...");
-    		return;
-    	}
-    	
+    	c.setTime(today); 
     	c.add(Calendar.DATE, -Integer.parseInt(config.getParameterValue("retainrange")));
     	dateLimit = c.getTime();    	
     	
