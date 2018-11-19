@@ -70,6 +70,8 @@ private String msgClassAParameter3;
 private String msgClassAParameter4;
 
 private String botUrl;
+private String botHWUrl;
+private String botCAUrl;
 private String botUrlAlive;
 private String results;
 private SimpleDateFormat dateFormat;
@@ -97,25 +99,48 @@ public void MainThread() throws UnsupportedEncodingException {
 		
     try {
 
-		Integer silentZoneHour = Integer.valueOf(((RELoadConfig.getInstance().getParameterValue("silentZoneStart")).split(":"))[0]);
-		Integer silentZoneMinute = Integer.valueOf(RELoadConfig.getInstance().getParameterValue("silentZoneStart").split(":")[1]);
-		Integer silentZoneSecond = Integer.valueOf(RELoadConfig.getInstance().getParameterValue("silentZoneStart").split(":")[2]);
+		
+		dateFormat = new SimpleDateFormat("dd/MM/yyyy"); 
+		dateFormathhmmss = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"); 
+    	today = new Date();
+    	
+    	config = RELoadConfig.getInstance();
+
+		Integer silentZoneHour = Integer.valueOf(((config.getParameterValue("silentZoneStart")).split(":"))[0]);
+		Integer silentZoneMinute = Integer.valueOf(config.getParameterValue("silentZoneStart").split(":")[1]);
+		Integer silentZoneSecond = Integer.valueOf(config.getParameterValue("silentZoneStart").split(":")[2]);
 		LocalTime silentZone = LocalTime.of(silentZoneHour,silentZoneMinute,silentZoneSecond,0);
-		Calendar silentZoneTZ = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone")));
+		Calendar silentZoneTZ = Calendar.getInstance(TimeZone.getTimeZone(config.getParameterValue("timezone")));
 		silentZoneTZ.set(Calendar.HOUR_OF_DAY, silentZone.getHour());
 		silentZoneTZ.set(Calendar.MINUTE, silentZone.getMinute());
 		silentZoneTZ.set(Calendar.SECOND, silentZone.getSecond());
 		silentZoneTZ.set(Calendar.MILLISECOND, 0);
     			
 		Date silentZoneTZStart = silentZoneTZ.getTime();
-		silentZoneTZ.set(Calendar.HOUR_OF_DAY, silentZone.getHour() + Integer.parseInt(RELoadConfig.getInstance().getParameterValue("silentZoneDuration")));
+		silentZoneTZ.set(Calendar.HOUR_OF_DAY, silentZone.getHour() + Integer.parseInt(config.getParameterValue("silentZoneDuration")));
 		Date silentZoneTZEnd = silentZoneTZ.getTime();
-    	
-		dateFormat = new SimpleDateFormat("dd/MM/yyyy"); 
-		dateFormathhmmss = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"); 
-    	today = new Date();
-    	
-    	config = RELoadConfig.getInstance();
+		
+		
+		Calendar todayTZ = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone"))); 
+		todayTZ.setTime(today);
+    	if (todayTZ.getTime().after(silentZoneTZStart) && todayTZ.getTime().before(silentZoneTZEnd)) {
+    		System.out.println("Zona silenziosa attiva...");
+    		return;
+    	}
+		
+		Integer silentTopicHour = Integer.valueOf(((config.getParameterValue("silentTopicsStart")).split(":"))[0]);
+		Integer silentTopicMinute = Integer.valueOf(config.getParameterValue("silentTopicsStart").split(":")[1]);
+		Integer silentTopicSecond = Integer.valueOf(config.getParameterValue("silentTopicsStart").split(":")[2]);
+		LocalTime silentTopic = LocalTime.of(silentTopicHour,silentTopicMinute,silentTopicSecond,0);
+		Calendar silentTopicTZ = Calendar.getInstance(TimeZone.getTimeZone(config.getParameterValue("timezone")));
+		silentTopicTZ.set(Calendar.HOUR_OF_DAY, silentTopic.getHour());
+		silentTopicTZ.set(Calendar.MINUTE, silentTopic.getMinute());
+		silentTopicTZ.set(Calendar.SECOND, silentTopic.getSecond());
+		silentTopicTZ.set(Calendar.MILLISECOND, 0);
+    			
+		Date silentTopicTZStart = silentTopicTZ.getTime();
+		silentTopicTZ.set(Calendar.HOUR_OF_DAY, silentZone.getHour() + Integer.parseInt(config.getParameterValue("silentTopicsDuration")));
+		Date silentTopicTZEnd = silentTopicTZ.getTime();
     	
     	if (threadIndex == 1) {
 	    	String AliveMsg = dateFormathhmmss.format(today) + " (local Timezone) [javaREbot:1.2] Service Alive";
@@ -125,15 +150,9 @@ public void MainThread() throws UnsupportedEncodingException {
     	
 
     	//Sottraggo xx giorni alla data di oggi
-    	dateLimit = dateFormat.parse(dateFormat.format(new Date()));
+    	//dateLimit = dateFormat.parse(dateFormat.format(new Date()));
     	Calendar c = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone"))); 
     	c.setTime(today);
-    	
-    	if (c.getTime().after(silentZoneTZStart) && c.getTime().before(silentZoneTZEnd)) {
-    		System.out.println("Attiva SilentZone...");
-    		return;
-    	}
-    	
     	c.add(Calendar.DATE, -Integer.parseInt(config.getParameterValue("retainrange")));
     	dateLimit = c.getTime();    	
     	
@@ -291,7 +310,10 @@ public void MainThread() throws UnsupportedEncodingException {
 		        		//String compiti = co.asXml().replaceAll("<td.*>((.|\\s)*)<\\/td>", "$1").trim().replaceAll("<br\\/>\\s*", ""); // prende tutto il testo contenuto nel tag <td..></td>
 			        	//compiti = compiti.replaceAll("^\\s*/gm", "");
 			        	//System.out.println(compiti);
-		        		String attivita = al.asText();
+		        		String attivita = new String();
+		            	if (todayTZ.getTime().after(silentTopicTZStart) && todayTZ.getTime().before(silentTopicTZEnd)) {
+		            		attivita = "";
+		            	} else attivita = al.asText();
 		        		String compiti = co.asText();
 		        		if ((!attivita.isEmpty() || !compiti.isEmpty())) { 
 				        	if (dateFormat.parse(hWdata).after(dateLimit)) {
@@ -389,22 +411,27 @@ public void MainThread() throws UnsupportedEncodingException {
   
 	private void SendHomeWorks(List<HomeWorksBean> arrayToSend) throws Exception {
 		  	
-	if (config.getParameterValue("testRegFlag").equalsIgnoreCase("1")) 
-		botUrl=config.getParameterValue("boturltest");
-	else botUrl=config.getParameterValue("bothomeworkurl");
+	if (config.getParameterValue("testRegFlag").equalsIgnoreCase("1")) {
+		botHWUrl=config.getParameterValue("boturltest");
+	    botCAUrl=config.getParameterValue("boturltest");
+	}
+	else { 
+		botHWUrl=config.getParameterValue("bothomeworkurl");
+		botCAUrl=config.getParameterValue("bottopicsurl");
+	}
 	
 	for (HomeWorksBean cb : arrayToSend) {
 	  int idxObj = arrayToSend.indexOf(cb);
 	  if (cb.getFlgClassASend()) {
 		String msgClassAParameter = "<b>" + msgClassAParameter2 + dateFormat.format(cb.getData()) + "</b> \n" + msgClassAParameter3 + cb.getClassActivity() + msgClassAParameter4;
-	  	String botUrltmp = botUrl.concat(URLEncoder.encode(msgClassAParameter,"UTF-8"));
+	  	String botUrltmp = botCAUrl.concat(URLEncoder.encode(msgClassAParameter,"UTF-8"));
 	    results = doHttpUrlConnectionAction(botUrltmp);
 	    printLog("Inviato nuovo argomento del " + cb.getData().toString());		
 	    cb.setFlgClassASend(false);
 	  }	  
 	  if (cb.getFlgHomeWSend()) {
 		String msgHomeWParameter = "<b>" + msgHomeWParameter2 + dateFormat.format(cb.getData()) + "</b> \n" + msgHomeWParameter3 + cb.getHWork() + msgHomeWParameter4;
-	  	String botUrltmp = botUrl.concat(URLEncoder.encode(msgHomeWParameter,"UTF-8"));
+	  	String botUrltmp = botHWUrl.concat(URLEncoder.encode(msgHomeWParameter,"UTF-8"));
 	    results = doHttpUrlConnectionAction(botUrltmp);
 	    printLog("Inviato nuovo compito del " + cb.getData().toString());
 	    cb.setFlgHomeWSend(false);
