@@ -123,6 +123,7 @@ public void MainThread() throws UnsupportedEncodingException {
 		
 		Calendar todayTZ = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone"))); 
 		todayTZ.setTime(today);
+		System.out.println(todayTZ.getTime().toString());
     	if (todayTZ.getTime().after(silentZoneTZStart) && todayTZ.getTime().before(silentZoneTZEnd)) {
     		System.out.println("Zona silenziosa attiva...");
     		return;
@@ -139,7 +140,7 @@ public void MainThread() throws UnsupportedEncodingException {
 		silentTopicTZ.set(Calendar.MILLISECOND, 0);
     			
 		Date silentTopicTZStart = silentTopicTZ.getTime();
-		silentTopicTZ.set(Calendar.HOUR_OF_DAY, silentZone.getHour() + Integer.parseInt(config.getParameterValue("silentTopicsDuration")));
+		silentTopicTZ.set(Calendar.HOUR_OF_DAY, silentTopic.getHour() + Integer.parseInt(config.getParameterValue("silentTopicsDuration")));
 		Date silentTopicTZEnd = silentTopicTZ.getTime();
     	
     	if (threadIndex == 1) {
@@ -148,7 +149,6 @@ public void MainThread() throws UnsupportedEncodingException {
 	    	//results = doHttpUrlConnectionAction(botUrlAlive);
     	}
     	
-
     	//Sottraggo xx giorni alla data di oggi
     	//dateLimit = dateFormat.parse(dateFormat.format(new Date()));
     	Calendar c = Calendar.getInstance(TimeZone.getTimeZone(RELoadConfig.getInstance().getParameterValue("timezone"))); 
@@ -402,7 +402,7 @@ public void MainThread() throws UnsupportedEncodingException {
 	for (ComBean cb : arrayToSend) {
 	  	String msgParameter = msgParameter2 + dateFormat.format(cb.getData()) + msgParameter3 + cb.getCom() + msgParameter4;
 	  	String botUrltmp = botUrl.concat(URLEncoder.encode(msgParameter,"UTF-8"));
-        results = doHttpUrlConnectionAction(botUrltmp);
+        //results = doHttpUrlConnectionAction(botUrltmp);
         printLog("Inviata nuova comunicazione del " + cb.getData().toString());		
 	}
 	
@@ -425,14 +425,14 @@ public void MainThread() throws UnsupportedEncodingException {
 	  if (cb.getFlgClassASend()) {
 		String msgClassAParameter = "<b>" + msgClassAParameter2 + dateFormat.format(cb.getData()) + "</b> \n" + msgClassAParameter3 + cb.getClassActivity() + msgClassAParameter4;
 	  	String botUrltmp = botCAUrl.concat(URLEncoder.encode(msgClassAParameter,"UTF-8"));
-	    results = doHttpUrlConnectionAction(botUrltmp);
+	    //results = doHttpUrlConnectionAction(botUrltmp);
 	    printLog("Inviato nuovo argomento del " + cb.getData().toString());		
 	    cb.setFlgClassASend(false);
 	  }	  
 	  if (cb.getFlgHomeWSend()) {
 		String msgHomeWParameter = "<b>" + msgHomeWParameter2 + dateFormat.format(cb.getData()) + "</b> \n" + msgHomeWParameter3 + cb.getHWork() + msgHomeWParameter4;
 	  	String botUrltmp = botHWUrl.concat(URLEncoder.encode(msgHomeWParameter,"UTF-8"));
-	    results = doHttpUrlConnectionAction(botUrltmp);
+	    //results = doHttpUrlConnectionAction(botUrltmp);
 	    printLog("Inviato nuovo compito del " + cb.getData().toString());
 	    cb.setFlgHomeWSend(false);
 	  }
